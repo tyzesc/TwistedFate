@@ -80,6 +80,10 @@ async function login(email, password) {
  *     - bloodType: ''
  *     - avatar: 'https://photos.dcard.tw/memberPhotos/2db57835-0c89-47fe-8453-c83650b736ea'
  * 
+ * if there is error (1317 代表三日未抽卡):
+ * - dcard: null
+ * - error: 1317
+ * - reason: 'system'
  * 
  * @async
  * @param {string} token Dcard API Token
@@ -93,6 +97,8 @@ async function draw(token) {
 
     try {
         let today = await fetch("https://www.dcard.tw/v2/dcard", { method: "GET", headers: hc }).then(res => res.json());
+        if (today.dcard === null)
+            throw new Error('抽卡發生問題（可能是太久沒登入）');
         return today;
     } catch (e) {
         throw new Error('Dcard API 存取被拒');
