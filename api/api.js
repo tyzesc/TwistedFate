@@ -23,6 +23,7 @@ async function login(email, password) {
     try {
         const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
         const page = await browser.newPage();
+        await page.setDefaultNavigationTimeout(10 * 1000);
         await page.goto('https://www.dcard.tw/signup');
         await page.type(`input[type='email']`, email);
         await page.type(`input[type='password']`, password);
@@ -116,6 +117,7 @@ async function draw(token) {
  */
 async function accept(token, greeting = 'Good morning.') {
     try {
+        let hc = JSON.parse(JSON.stringify(header)); hc.Authorization = token;
         let result = await fetch("https://www.dcard.tw/v2/dcard/accept", { method: "POST", headers: hc, body: JSON.stringify({ firstMessage: greeting }) }).then(res => res.json());
         return result;
     } catch (e) {
