@@ -43,10 +43,7 @@ bot.on('message', async msg => {
         let email = text.split(' ')[1];
         let password = text.split(' ')[2];
         let user = users[chatId];
-        if (user === undefined) { user = users[chatId] = { token: "", platform: "tg", lastupdate: getTodayDateIntLike() } };
-
-        if (user.token === "")
-            return bot.sendMessage(chatId, `首次使用請輸入\n\`/dcard xxxxx@xxx.edu.tw password\``, { parse_mode: 'MarkdownV2' });
+        if (user === undefined) { user = users[chatId] = { token: "", platform: "tg", lastupdate: getTodayDateIntLike() } }
 
         if (email !== undefined && password !== undefined) {
             let header = '小精靈正前往 Dcard 送信';
@@ -77,6 +74,9 @@ bot.on('message', async msg => {
                 clearInterval(interval);
             }
         }
+
+        if (user.token === "")
+            return bot.sendMessage(chatId, `首次使用請輸入\n\`/dcard xxxxx@xxx.edu.tw password\``, { parse_mode: 'MarkdownV2' });
 
         try {
             let result = await Dcard.draw(user.token);
