@@ -1,5 +1,4 @@
 const fetch = require('node-fetch');
-const puppeteer = require('puppeteer');
 
 const header = {
     'Host': 'www.dcard.tw',
@@ -21,34 +20,27 @@ const header = {
 async function login(email, password) {
     let access_token = "";
     try {
-        const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
-        const page = await browser.newPage();
-        await page.setDefaultNavigationTimeout(10 * 1000);
-        await page.goto('https://www.dcard.tw/signup');
-        await page.type(`input[type='email']`, email);
-        await page.type(`input[type='password']`, password);
-        await page.evaluate(() => {
-            document.querySelectorAll(`button`).forEach(elem => { if (elem.innerText === '註冊 / 登入') elem.click(); })
-        });
-        await page.waitForNavigation();
-        await page.setRequestInterception(true);
-        let found = false;
-        page.on('request', request => {
-            const headers = request.headers();
-            if (found === false && headers !== undefined && headers.authorization !== undefined) {
-                found = true;
-                access_token = headers.authorization;
-            }
-            request.continue({ headers });
-        });
-        await page.click(`a[title='抽卡']`);
-        await page.waitForNavigation({ waitUntil: 'networkidle2' });
-        await browser.close();
+        let params = new URLSearchParams();
+        params.append("grant_type", "password")
+        params.append("username", email)
+        params.append("password", password)
+        params.append("scope", "message message:write member member:write photo email email:write friend friend:write forum forum:subscribe comment:write like match match:write notification report collection collection:write device device:write post post:write post:subscribe facebook persona persona:write phone phone:write phone:validate config:write config token:revoke facebook:validated profile:filled university:filled profile:validated university:validated identity:filled identity:validated intro:filled intro:validated email:validated persona:subscribe idcard topic topic:subscribe");
+
+        let json = await fetch('https://www.dcard.tw/v2/oauth/token', {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Authorization': "Basic ZDMwNDQwNjQtZDkzNi00ZmQ5LWJhOTEtODYxNTNhODQ1ZDFmOnV4Z2lZRHRuS1pUU0hSVmJVbVhjd0pOTHhYQmdURCsxQkxjRktiUU5aYjg9"
+            },
+            body: params
+        }).then(res => res.json());
+        access_token = `${json.token_type} ${json.access_token}`;
     } catch (e) {
         console.error(e);
-        throw new Error('puppeteer error');
+        throw new Error('Dcard OAuth 失效');
     }
-    if (access_token === "") throw new Error('登入失敗，請檢查帳號密碼是否正確？');
+    if (access_token === "")
+        throw new Error('OAuth登入失敗，請檢查帳號密碼是否正確？');
     return access_token;
 }
 
