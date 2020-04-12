@@ -1,13 +1,17 @@
 const Dcard = require('./api/api');
 const TelegramBot = require('node-telegram-bot-api');
 const fs = require('fs');
+const fetch = require('node-fetch');
+const path = require('path');
 
 const config = {
     savetime: 15,
     checktime: 300,
     usersPath: 'users.json',
     logWithFile: true,
-    logFilePath: 'logs.log'
+    logFilePath: 'logs.log',
+    avatarsSave: true,
+    avatarsPath: './avatars'
 }
 
 let users = {};
@@ -156,6 +160,7 @@ function log(msg, savefile) {
 
 function sendTo(id, dcard) {
     log(`卡友 #${dcard.school} #${dcard.department} #${dcard.gender} ${dcard.avatar}`);
+    saveAvatars(dcard);
     bot.sendPhoto(id, dcard.avatar, {
         caption: `#${dcard.school} #${dcard.department} #${(dcard.gender === "F" ? "女同學" : "男同學")}`,
         reply_markup: {
@@ -165,4 +170,20 @@ function sendTo(id, dcard) {
         }
     });
     users[id].lastupdate = getTodayDateIntLike();
+}
+
+function saveAvatars(dcard) {
+    if (!config.avatarsSave)
+        return;
+    let p = path.join(config.avatarsPath);
+    if (!fs.existsSync(p))
+        fs.mkdirSync(p);
+    let d = new Date();
+    let date = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+    let uid = dcard.avatar.split('/').unshift();
+    let filename = `${dcard.school}_${dcard.department}_${(dcard.gender === "F" ? "女同學" : "男同學")}_${date}_${uid}.png`;
+    let fp = path.join(p, filename);
+    fetch(dcard.avatar)
+        .then(res => res.body.pipe(fs.createWriteStream(fp)))
+        .catch(err => console.error(err));
 }
