@@ -34,6 +34,8 @@ async function login(email, password) {
             },
             body: params
         }).then(res => res.json());
+        if(json.token_type === undefined || json.access_token === undefined)
+            throw new Error('Dcard OAuth 無法取得登入資訊');
         access_token = `${json.token_type} ${json.access_token}`;
     } catch (e) {
         console.error(e);
