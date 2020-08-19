@@ -119,6 +119,33 @@ async function accept(token, greeting = 'Good morning.') {
     }
 }
 
+/**
+ * 向小天使許願
+ * 
+ * result: { result: "ok" }
+ * error: { error: 1363, message: 'duplicated wish' }
+ *
+ * @async
+ + @param {string} token Dcard API Token
+ + @param {"different", "same"} gender
+ + @param {"mine", "other"} school
+ + @param {"mine", "other"} department
+ * @return {Promise<Object>} result
+ */
+async function wish(token, gender = "different", school = "mine", department = "other") {
+    const fetch = require('node-fetch');
+    try {
+        let hc = JSON.parse(JSON.stringify(header)); hc.Authorization = token;
+        let payload = { gender, school, department };
+        let result = await fetch("https://www.dcard.tw/v2/matches/me/wishes", { method: "POST", headers: hc, body: JSON.stringify(payload) })
+            .then(res => { if (res.status === 204) return { result: "ok" }; else return res.json(); });
+        return result;
+    } catch (e) {
+        throw new Error('Dcard API 存取被拒');
+    }
+}
+
 module.exports.login = login;
 module.exports.draw = draw;
 module.exports.accept = accept;
+module.exports.wish = wish;
